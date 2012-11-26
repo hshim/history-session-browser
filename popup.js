@@ -26,7 +26,7 @@ function buildPopupDom(divName, sessions) {
     var newSessionList = document.createElement('li');
     newSessionList.appendChild(document.createTextNode("Session from: ".concat(new Date(session.start), " ~ ", new Date(session.end))));
     var newURLList = document.createElement('ul');
-    /*
+    
     for (var j = 0; j < session.historyItems.length; j++){
       var a = document.createElement('a');
       a.href = session.historyItems[j].url;
@@ -35,7 +35,8 @@ function buildPopupDom(divName, sessions) {
       var li = document.createElement('li');
       li.appendChild(a);
       newURLList.appendChild(li);
-    }*/
+    }
+    /*
     for (var j = 0; j < session.length; j++){
       var a = document.createElement('a');
       a.href = session[j];
@@ -44,7 +45,7 @@ function buildPopupDom(divName, sessions) {
       var li = document.createElement('li');
       li.appendChild(a);
       newURLList.appendChild(li);
-    }
+    }*/
     newSessionList.appendChild(newURLList);
     ul.appendChild(newSessionList);
   }
@@ -471,7 +472,7 @@ function buildUrlList(divName) {
       //console.log("lets print whats in history\n");
       //console.log(sessions);
       
-      sessions = buildDocuments(urls);
+      //sessions = buildDocuments(urls);
       buildPopupDom(divName, sessions);
     });
 
