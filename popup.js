@@ -1,11 +1,11 @@
 /** 
  * Groups user's recently visited pages into sessions.
  *
- * Reads history up to one week from now. 
- * But limits total number of pages read to 200.
  */
 
 // Open the link in a new tab of the current window.
+var selected_icon;
+
 function onAnchorClick(event) {
   chrome.tabs.create({
     selected: true,
@@ -13,57 +13,344 @@ function onAnchorClick(event) {
   });
   return false;
 }
+function onFoldLinkClick(event) {
+  var btn = event.srcElement;
+  var parents = (btn.parentNode.parentNode.childNodes);
+  var list;
+  for(var s in parents){
+    if(parents[s].className == "listDiv"){
+      list = parents[s];
+    }
+  }
+  if(list){
+    if(list.id == "shown"){
+      btn.innerText = "\u25BC";
+      btn.id = "expand";
+      list.id = "hidden";
+      list.setAttribute("style", "display: none;");
+    } else{
+      btn.innerText = "\u25B2";
+      btn.id = "collapse";
+      list.id = "shown";
+      list.setAttribute("style", "display: block;");      
+    }
+  }
+  return false;
+}
+function onLineClick(event){
+  var line = event.srcElement;
+  var children = line.childNodes;
+  var siblings = line.parentNode.childNodes;
+  console.log(children);
+  var mark;
+  for(var s in children){
+    if(children[s].className == "mark") {
+      mark = children[s];
+    }
+  }
+  if(mark){
+    if(mark.id == ""){
+      mark.style.background = "black";
+      mark.id = "black";
+      return false;
+    }
+    else {
+      mark.style.background = "transparent";
+      mark.id = "";
+      return false;
+    }
+  }
+  for(var s in siblings){
+    if(siblings[s].className == "mark") {
+      mark = siblings[s];
+    }
+  }
+  if(mark){
+    if(mark.id == ""){
+      mark.style.background = "black";
+      mark.id = "black";
+      return false;
+    }
+    else {
+      mark.style.background = "transparent";
+      mark.id = "";
+      return false;
+    }
+  }
+
+
+  return false;
+}
+function lineHoverOver(event){
+  var line = event.srcElement;
+  var children = line.childNodes;
+  var siblings = line.parentNode.childNodes;
+  console.log(children);
+  var mark;
+  for(var s in children){
+    if(children[s].className == "mark") {
+      mark = children[s];
+    }
+  }
+  if(mark && mark.id == ""){
+    mark.style.backgroundColor = "white";
+    mark.style.border = "1px solid black"; 
+    return false;
+  }
+  for(var s in siblings){
+    if(siblings[s].className == "mark") {
+      mark = siblings[s];
+    }
+  }
+  if(mark && mark.id == ""){
+    mark.style.backgroundColor = "white";
+    mark.style.border = "1px solid black"; 
+    return false;
+  }
+  return false;
+}
+function lineHoverOut(event){
+  var line = event.srcElement;
+  var children = line.childNodes;
+  var siblings = line.parentNode.childNodes;
+  var mark;
+  for(var s in children){
+    if(children[s].className == "mark") {
+      mark = children[s];
+    }
+  }
+  if(mark && mark.id == ""){
+    mark.style.backgroundColor = "transparent";
+    mark.style.border = "none"; 
+    return false;
+  }
+  for(var s in siblings){
+    if(siblings[s].className == "mark") {
+      mark = siblings[s];
+    }
+  }
+  if(mark && mark.id == ""){
+    mark.style.backgroundColor = "transparent";
+    mark.style.border = "none";    
+    return false;
+  }
+  return false;
+}
+
+function iconHoverOver(event){
+  var icon = event.srcElement;
+  if(icon.className != "selected"){
+    icon.style.border = "1px solid black";
+  }
+}
+
+function iconHoverOut(event){
+  var icon = event.srcElement;
+  if(icon.className != "selected"){
+    icon.style.border = "";
+  }
+}
+
+function onIconClick(event){
+  var icon = event.srcElement;
+  if(icon.className == "selected"){
+    icon.className = "";
+    icon.style.border = "";
+    selected_icon = null;
+  }
+  else{
+    if(selected_icon){
+      selected_icon.className = "";
+      selected_icon.style.border = "";
+      selected_icon = icon;
+    }
+    icon.className = "selected";
+    icon.style.border = "1px solid black";
+    selected_icon = icon;
+  }
+}
+
+function onHeaderClick(event){
+  if(event.srcElement.className != "header") return false;
+  if(selected_icon){
+      selected_icon.className = "";
+      selected_icon.style.border = "";
+      selected_icon = null;
+  }
+}
 
 // Given an array of historyItems, build lists of links for different sessions.
 function buildPopupDom(divName, sessions) {
+  
   var popupDiv = document.getElementById(divName);
 
-  var ul = document.createElement('ul');
-  popupDiv.appendChild(ul);
-
+  // var history = document.createElement('div');
+  // popupDiv.appendChild(history);
+  var date = new Date();
+  
+  // for every timed session.
   for (var i = 0, ie = sessions.length; i < ie; ++i) {
     var session = sessions[i];
-    var newSessionList = document.createElement('li');
-    newSessionList.appendChild(document.createTextNode("Session from: ".concat(new Date(session.start), " ~ ", new Date(session.end))));
-    var newURLList = document.createElement('ul');
-    
-    for (var j = 0; j < session.historyItems.length; j++){
-      var a = document.createElement('a');
-      a.href = session.historyItems[j].url;
-      a.appendChild(document.createTextNode(session.historyItems[j].title));
-      a.addEventListener('click', onAnchorClick);
-      var li = document.createElement('li');
-      li.appendChild(a);
-      newURLList.appendChild(li);
+    var timedSession = document.createElement('ul');
+    if(date > session.start){
+      date = new Date(new Date(session.start).setHours(0,0,0,0));
+      var dateText = document.createElement('h3');
+      dateText.appendChild(document.createTextNode(date.toLocaleDateString()));
+      popupDiv.appendChild(dateText);
     }
-    /*
-    for (var j = 0; j < session.length; j++){
-      var a = document.createElement('a');
-      a.href = session[j];
-      a.appendChild(document.createTextNode(session[j]));
-      a.addEventListener('click', onAnchorClick);
-      var li = document.createElement('li');
-      li.appendChild(a);
-      newURLList.appendChild(li);
-    }*/
-    newSessionList.appendChild(newURLList);
-    ul.appendChild(newSessionList);
+    //timedSession.appendChild(document.createTextNode("Session from: ".concat(new Date(session.start).toLocaleTimeString().slice(0,5)))); //, " ~ ", new Date(session.end))));
+
+    // var clusterList = document.createElement('div');
+
+    for (var j = 0; j < session.clusters.length; j++){
+	    
+  	  var cluster = session.clusters[j];
+      var listDiv = document.createElement('div');;
+      listDiv.className += "listDiv";
+  	  var clusterInDiv = document.createElement("div");
+  	  for (var k = 0; k < cluster.length; k++){
+        var historyItem = cluster[k];
+  	    var titleDiv = document.createElement('div');
+
+
+        var a = document.createElement('a');
+        a.href = historyItem.url;
+        if(historyItem.title == "") a.appendChild(document.createTextNode("(Untitled)"));
+        else a.appendChild(document.createTextNode(historyItem.title));
+
+        var hostDiv = document.createElement('div');
+  	    hostDiv.appendChild(document.createTextNode(a.hostname));
+
+  	    var timeDiv = document.createElement('div');
+        timeDiv.appendChild(document.createTextNode(new Date(historyItem.lastVisitTime).toLocaleTimeString().slice(0,5)));
+  	    // var dl = document.createElement('dl');
+       //  dl.appendChild(document.createTextNode("alkefn"));
+  	    // dl.appendChild(titleDiv);
+  	    // dl.appendChild(hostDiv);
+  	    // dl.className += "icon";
+        // dl.className += "lineup";
+
+
+        // var img = document.createElement('img');
+        // img.wititleDivh = "20";
+        // img.height = "20";
+        // img.src = "http://" + a.hostname + "/favicon.ico" //"url('http://"+ a.hostname + "/favicon.ico')";
+        //img.setAttribute("onerror", "this.src='/favicon.ico';");
+        titleDiv.style.backgroundImage = "url('http://"+ a.hostname + "/favicon.ico')";
+        titleDiv.className += "title";
+        hostDiv.className += "host";
+        timeDiv.className += "time";
+
+        
+        // a.appendChild(timeDiv);
+        titleDiv.appendChild(a);
+        a.addEventListener('click', onAnchorClick);
+
+        var mark = document.createElement("button");
+        // mark.addEventListener('click', onMarkClick);
+        // mark.setAttribute("background", "transparent");
+        mark.style.backgroundColor = "transparent";
+        mark.style.border = "none";
+
+        mark.className += "mark";
+        // a.appendChild(document.createElement("br"));
+        // a.appendChild(hostDiv);
+        if(cluster.length > 1){
+          if(k == 0) {
+            listDiv = document.createElement('div');
+            listDiv.className += "listDiv";
+          }
+    	    var li = document.createElement('li');
+          li.appendChild(mark);
+          li.appendChild(timeDiv);
+    	    li.appendChild(titleDiv);
+          li.appendChild(hostDiv);
+          li.className += "line";
+          li.addEventListener('mouseover', lineHoverOver);
+          li.addEventListener('mouseout', lineHoverOut);
+          li.addEventListener('click', onLineClick);
+          listDiv.appendChild(li);
+          listDiv.id = "hidden";
+          listDiv.setAttribute("style", "display: none;")
+        } else {
+          clusterInDiv.appendChild(mark);
+          clusterInDiv.appendChild(timeDiv);
+          clusterInDiv.appendChild(titleDiv);
+          clusterInDiv.appendChild(hostDiv);
+          clusterInDiv.addEventListener('mouseover', lineHoverOver);
+          clusterInDiv.addEventListener('mouseout', lineHoverOut);
+          clusterInDiv.addEventListener('click', onLineClick);
+          clusterInDiv.className += "line";
+        }
+  	  }
+
+      if(cluster.length > 1){
+        var lineDiv = document.createElement('div');
+        lineDiv.appendChild(mark);
+        lineDiv.appendChild(timeDiv);
+        lineDiv.appendChild(titleDiv);
+        lineDiv.appendChild(hostDiv);
+        lineDiv.className += "line";
+        // lineDiv.className += "lineDiv";
+        var fold_link = document.createElement("button");
+        // fold_link.href = "#!";
+        fold_link.addEventListener('click', onFoldLinkClick);
+        fold_link.appendChild(document.createTextNode("\u25BC"));
+        fold_link.className += "fold_link";
+        fold_link.id = "expand";
+        //fold_link.appendChild(document.createElement("br"));
+        // var clusterOutDiv = document.createElement("div");
+        lineDiv.appendChild(fold_link);
+        clusterInDiv.appendChild(lineDiv);
+        clusterInDiv.appendChild(listDiv);
+      }
+
+  	  // clusterOutDiv.appendChild(clusterInDiv);
+  	  timedSession.appendChild(clusterInDiv);
+      popupDiv.id = "clusterExpander";
+
+      // history.setAttribute("data-collapse");
+
+    }
+
+    // timedSession.appendChild(clusterList);
+    timedSession.className += "timedSession";
+
+    popupDiv.appendChild(timedSession);
+
   }
+
+  // icons for groups
+  var iconDiv = $('.group_icons')[0];
+  var headerDiv = $('.header')[0];
+  headerDiv.addEventListener('click', onHeaderClick);
+  var icons = iconDiv.childNodes;
+  console.log(iconDiv);
+  for(var g in icons){
+    console.log(g.src);
+    var icon = icons[g];
+    icon.addEventListener('mouseover', iconHoverOver);
+    icon.addEventListener('mouseout', iconHoverOut);
+    icon.addEventListener('click', onIconClick);
+  }
+
 }
  
 var DOMAINS = ["www","com","org","edu","net", "", "html", "htm"];
 
 // returns dictionary of the url (term -> frequency)
-function parse(url) {
+//TODO
+function parse(url, title) {
+  title = title.split(/\W/g).filter(function(s){return s.length});
   url = decodeURIComponent(url.replace(/\+/g, " "));
   url = url.replace(/http:\/\//gi,"").replace(/https:\/\//gi,"");
   var parsed = 
-    url.split(/[.\-\_\/&=?~ ]/).filter(function(term) {
+    title.concat(url.split(/\W/g)).filter(function(term) {
                                       return (term.length > 1) 
                                           && (DOMAINS.indexOf(term) == -1);
                                     });
   parsed = parsed.map(stemmer).map(function(w) { return w.toLowerCase(); });
-  console.log(parsed);
+  //console.log(parsed);
   var dict = {};
   parsed.map(function(term){
                if(!dict[term]) dict[term] = 1;
@@ -73,17 +360,21 @@ function parse(url) {
   return dict;
 }
 
-function buildDocuments(urls) {
+function buildDocuments(historyItems) {
+  var urls = historyItems.map(function(hi){ return hi.url; })
+  //console.log("urls:");
+  //console.debug(urls);
+  var titles = historyItems.map(function(hi){ return hi.title; })
   var d;
   var termToIndex = {}; // (term -> index in vector)
   var termToFreqs = {};
   var docs = [];
-  var total = 0;
+  var total = 0; // total number of terms
   // parse each url and build docs & termToIndex.
   // docs: array of parsed dictionaries
   // termToIndex: dictionary mapping from term to index in vector
-  for (var i in urls) {
-    d = parse(urls[i]);
+  for (var i in historyItems) {
+    d = parse(urls[i], titles[i]);
     docs.push(d);
     for(var term in d){
       termToIndex[term] = 0;
@@ -117,7 +408,7 @@ function buildDocuments(urls) {
                     });
   //debug end
   
-  var vectors = []; // size == total
+  var vectors = []; // vectors.length == total
   var i=0;
   for (var k = 0; k < docs.length; k++) {
     var doc = docs[k];
@@ -155,7 +446,7 @@ function buildDocuments(urls) {
     }
     simMatrix[i] = simFromi;
   }
-
+  //console.log(vectors);
   // clusters[i] is array of all indices of vectors it shares cluster with.
   // clusterHierarchy maps index of vector to index of vector it shares cluster with,
   //   but it only keeps track of those with similarity level greater than or equal to simLevel.
@@ -169,6 +460,7 @@ function buildDocuments(urls) {
   }
   var maxSim = {vector1:0, vector2:1, sim:simMatrix[0][1]};
 
+	//console.log(simMatrix);
   // start clustering process. 
   // each iteration merges two clusters into one.
   for (var iter = 0; iter < simMatrix.length - 1; iter++){
@@ -199,7 +491,7 @@ function buildDocuments(urls) {
     }
     liveClusters[maxSim.vector2] = false;
   }
-
+  //console.debug(clusterHierarchy);
   // build clusters to be returned.
   // clusters maps index of one vector in a cluster
   //   to indices of vectors that are in the same cluster.
@@ -210,23 +502,49 @@ function buildDocuments(urls) {
       clusterIndex = clusterHierarchy[clusterIndex];
     }
     if(!clusters[clusterIndex]) {
-      clusters[clusterIndex] = [];
+      clusters[clusterIndex] = [k];
     }
     else {
       clusters[clusterIndex].push(k);
     }
   }
+  
+  // labeling start
+  for (var c in clusters){
+    var cluster = clusters[c]; // array of indices
+    var freq = {};
+    cluster = cluster.map(function(i) { return docs[i];});
+    cluster.map(
+      function(dict){
+        for(var k in dict){
+          if(freq[k]) freq[k]+=dict[k];
+          else freq[k] = dict[k];
+        }
+      });
+    var mostFreq = {term: "", freq: 0};
+    for(var k in freq){
+      if(freq[k] >= mostFreq.freq){
+        mostFreq.term = k;
+        mostFreq.freq = freq[k];
+      }
+    }
+    label = mostFreq.term;
+  }
+  // labeling end
 
+  console.log(clusters);
+  // array of clusters where cluster is an array of urls
   var result = [];
   for(var c in clusters){
     var cluster = clusters[c];
     if(cluster.length > 0){
-      cluster = cluster.map(function(i) { return urls[i]; });
+      cluster = cluster.map(function(i) { return historyItems[i];});
     } else{
-      cluster.push(urls[c]);
+      cluster.push(historyItems[c]);
     }
     result.push(cluster);
   }
+  console.log(result);
   return result;
 }
 
@@ -458,6 +776,7 @@ function buildUrlList(divName) {
       //console.log("Num history Items: ".concat(historyItems.length, "\n"));
       for (var i = 0; i < historyItems.length; ++i) {
         // Initialize the first session.
+
         if(!sessions.length) {
           var newSession = {start:historyItems[i].lastVisitTime,
                             end:historyItems[i].lastVisitTime, 
@@ -465,14 +784,17 @@ function buildUrlList(divName) {
           sessions.push(newSession);
           continue;
         }
-        urls.push(historyItems[i].url);
         buildSession(historyItems[i]);
       }
-
       //console.log("lets print whats in history\n");
       //console.log(sessions);
-      
-      //sessions = buildDocuments(urls);
+	  sessions.map(
+		function(session){
+			session["clusters"] = buildDocuments(session.historyItems);
+		});
+      // urls.push(historyItems[i].url);
+      //       clusters = buildDocuments(urls);
+      console.log(sessions);
       buildPopupDom(divName, sessions);
     });
 
@@ -481,7 +803,7 @@ function buildUrlList(divName) {
    * Examine time gap between activities.
    * Two adjacent activities are counted in two different
    * sessions if the time between them exceeds some threshold,
-   * in this case, 10 minutes.
+   * in this case, 15 minutes.
    *
    * Assumes that historyItem does not belong to any previous sessions
    * (sessions[0 ~ currSessionIndex-1]).
@@ -489,7 +811,7 @@ function buildUrlList(divName) {
   function buildSession(historyItem) {
     var visitTime = historyItem.lastVisitTime;
 
-    var sessionInterval = 1000 * 60 * 10; // 10 minutes
+    var sessionInterval = 1000 * 60 * 15; // 15 minutes
     var session = sessions[currSessionIndex];
     var sessionStart = session.start;
     // Build new session if the page needs one.

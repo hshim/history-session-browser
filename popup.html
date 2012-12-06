@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <script src="../jquery-1.8.3.min.js"></script> 
     <title>Getting Started Extension's Popup</title>
     <style>
       body {
@@ -11,9 +12,23 @@
 
     <!-- JavaScript and HTML must be in separate files for security. -->
     <script src="popup.js"></script>
+    <script src="select.js"></script>
   </head>
   <body>
-	<h2>Recently Visited URLs: </h2>
-	<div id="typedUrl_div"></div>
+    <div class="header">
+      <div class="group_icons">
+        <img src="images/computer.png" width="30" height="30" align="right" style="padding:5px" />
+        <img src="images/news.png" width="30" height="30" align="right" style="padding:5px" />
+        <img src="images/running.png" width="30" height="30" align="right" style="padding:5px" />
+        <img src="images/shopping.png" width="30" height="30" align="right" style="padding:5px" />
+        <img src="images/studying.png" width="30" height="30" align="right" style="padding:5px" />
+        <img src="images/travel.png" width="30" height="30" align="right" style="padding:5px" />
+      </div>
+    </div>
+	  <div id="typedUrl_div"></div>
+	
+
   </body>
+  <link rel="stylesheet" type="text/css" media="screen" href="style.css" />
+
 </html>
